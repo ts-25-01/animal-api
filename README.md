@@ -9,3 +9,8 @@
 3. Status überprüfen mit `git status` 
 4. Füge Veränderungen zur Staging-Area hinzu mit `git add .`
 5. Mache einen Commit mit `git commit -m "Initial Commit"`
+6. Erstelle dir ein Repository auf Github.
+7. Füge das erstellte Repository (Github) als Remote Repository hinzu mit `git remote add origin https://github.com/ts-25-01/animal-api.git`
+8. Pushe deine Veränderungen mit `git push -u origin main` 
+## Erstellen der app.py
+1. Erstelle dir eine Datei mit dem Namen `app.py`
