@@ -28,6 +28,15 @@ def add_animal():
     animals.append(new_animal)
     return f"{new_animal} wurde erfolgreich hinzugefügt", 201
 
+## DELETE-Route, um ein Tier aus der Liste zu löschen
+@app.route("/api/animals/<name>", methods=['DELETE'])
+def delete_animal(name):
+    if name in animals:
+        animals.remove(name)
+        return f"{name} wurde aus der Liste gelöscht", 200
+    else:
+        return f"{name} ist nicht in der Liste enthalten", 404
+
 
 
 # App starten
