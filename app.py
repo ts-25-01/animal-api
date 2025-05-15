@@ -41,6 +41,7 @@ def delete_animal(name):
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres
+## PATCH-Route
 
 # App starten
 if __name__ == "__main__":
