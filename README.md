@@ -21,4 +21,7 @@
 git checkout -b feature/PUT-Route
 ```
 Jetzt wird ein neuer Branch mit dem Namen erstellt und wir wechseln direkt auf diesen Branch innerhalb unseres Terminals.
-2. Wenn wir diesen Branch pushen wollen, dann müssen wir folgendes beachten
+2. Wenn wir diesen Branch pushen wollen, dann müssen wir folgendes beachten: Pro neuen Branch den wir uns anlegen, müssen wir auch den upstream vor dem Pushen jeweils einrichten mit
+```bash
+git push --set-upstream origin feature/PUT-Route
+```
