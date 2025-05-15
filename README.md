@@ -14,3 +14,11 @@
 8. Pushe deine Veränderungen mit `git push -u origin main` 
 ## Erstellen der app.py
 1. Erstelle dir eine Datei mit dem Namen `app.py`
+...
+## Anlegen von Feature-Branches
+1. Wenn wir ein neues Feature zu unserer Anwendung bauen wollen, sollten wir uns einen eigenen Branch dafür anlegen. Das geht mit dem folgenden Befehl:
+```bash
+git checkout -b feature/PUT-Route
+```
+Jetzt wird ein neuer Branch mit dem Namen erstellt und wir wechseln direkt auf diesen Branch innerhalb unseres Terminals.
+2. Wenn wir diesen Branch pushen wollen, dann müssen wir folgendes beachten
