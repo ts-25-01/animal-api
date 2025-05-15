@@ -33,3 +33,8 @@ Behind und Ahead ist nicht gut wenn das zu groß wird, deswegen REGELMÄßIG mit
 git merge main
 ```
 Dann öffnet sich ein VIM-Fenster für die Merge-Message. Das könnt ihr schließen und speichern mit ESC und :wq und ENTER. Das dann bitte wieder pushen
+6. Wenn jemand anderes sich den aktuellen Stand und insbesondere den Feature-Branch lokal "reinziehen" möchte, dann muss er ein 
+```bash
+git pull origin feature/PUT-Route
+```
+oder alternativ mit `git pull --all` (sich alle neuen Branches mit Veränderungen reinziehen) holen. 
