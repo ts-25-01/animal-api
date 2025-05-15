@@ -25,3 +25,11 @@ Jetzt wird ein neuer Branch mit dem Namen erstellt und wir wechseln direkt auf d
 ```bash
 git push --set-upstream origin feature/PUT-Route
 ```
+3. Danach kannst du immer weiter Veränderungen durchführen, committen, pushen...
+4. Beachte, dass du mit jedem Commit ein Commit Ahead bist vom Main-Branch
+5. Außerdem wenn etwas parallel auf dem Main-Branch verändert wird, dann bist du auch so viele Commit behind..
+Behind und Ahead ist nicht gut wenn das zu groß wird, deswegen REGELMÄßIG mit dem main-Branch wieder mergen mit
+```bash
+git merge main
+```
+Dann öffnet sich ein VIM-Fenster für die Merge-Message. Das könnt ihr schließen und speichern mit ESC und :wq und ENTER. Das dann bitte wieder pushen
