@@ -38,3 +38,7 @@ Dann öffnet sich ein VIM-Fenster für die Merge-Message. Das könnt ihr schlie�
 git pull origin feature/PUT-Route
 ```
 oder alternativ mit `git pull --all` (sich alle neuen Branches mit Veränderungen reinziehen) holen. 
+
+
+## Branching Konzept
+test
