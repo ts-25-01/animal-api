@@ -1,5 +1,7 @@
 # importiere Flask von dem Modul flask
 from flask import Flask, jsonify, request
+# importiere Swagger vom flasgger Modul
+from flasgger import Swagger
 
 # initialisiere ein app-Objekt von der Klasse Flask
 app = Flask(__name__)
