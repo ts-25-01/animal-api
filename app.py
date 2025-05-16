@@ -30,7 +30,7 @@ def show_animals():
             description: JSON-Liste aller Tiere
             examples:
                 application/json:
-                    - 1: 20
+                    - id: 1
                       name: Dog
                       age: 3
                       genus: mammals
@@ -44,16 +44,62 @@ def show_animals():
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
 @app.route("/api/animals", methods=['POST'])
 def add_animal():
+    """
+    Neues Tier hinzufügen
+    ---
+    consumes:
+        - application/json
+    parameters:
+        - in: body
+          name: tier
+          required: true
+          schema:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 3
+                name:
+                    type: string
+                    example: Elephant
+                age:
+                    type: integer
+                    example: 10
+                genus:
+                    type: string
+                    example: mammals
+    responses:
+        201:
+            description: Name wurde erfolgreich hinzugefügt
+        400:
+            description: Fehler, kein Objekt übergeben
+    """
     ## Funktion um die Daten im JSON-Format aus dem Request-Objekt zu bekommen
     new_animal = request.get_json() # Hole dir aus dem Request-Objekt die Daten im JSON-Format
     # { "id": 3, "name": .., "age": ..., "genus": ...}
-
+    if not new_animal:
+        return f"Fehler, kein Objekt übergeben", 400
     animals.append(new_animal) # hänge das Objekt im JSON-Format hinten dran
     return f"{new_animal} wurde erfolgreich hinzugefügt", 201
 
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
 @app.route("/api/animals/<name>", methods=['DELETE'])
 def delete_animal(name):
+    """
+    Ein Tier löschen
+    ---
+    parameters:
+        - name: name
+          in: path
+          type: string
+          required: true
+          description: Der Name des zu löschenden Tieres
+    responses:
+        200:
+            description: Tier wurde gelöscht
+        404:
+            description: Tier wurde nicht gefunden
+    """
     for animal in animals:
         if animal["name"] == name:
             animals.remove(animal)
