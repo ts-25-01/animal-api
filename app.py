@@ -5,6 +5,8 @@ from flasgger import Swagger
 
 # initialisiere ein app-Objekt von der Klasse Flask
 app = Flask(__name__)
+# initialisiere ein swagger-Objekt von der Klasse Swagger, übergebe dabei das app-Objekt
+swagger = Swagger(app)
 
 ## Tiere in einer Liste speichern -> Local Storage
 animals = [
@@ -20,6 +22,9 @@ def home():
 ## GET-Route implementieren, d.h. Daten abrufen bzw. alle Tiere anzeigen
 @app.route("/api/animals", methods=['GET'])
 def show_animals():
+    """
+    Liste aller Tiere
+    """
     return jsonify(animals), 200
 
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
