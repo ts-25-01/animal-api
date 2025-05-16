@@ -24,6 +24,20 @@ def home():
 def show_animals():
     """
     Liste aller Tiere
+    ---
+    responses:
+        200:
+            description: JSON-Liste aller Tiere
+            examples:
+                application/json:
+                    - 1: 20
+                      name: Dog
+                      age: 3
+                      genus: mammals
+                    - id: 2
+                      name: Cat
+                      age: 2
+                      genus: mammals
     """
     return jsonify(animals), 200
 
