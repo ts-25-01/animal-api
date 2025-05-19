@@ -116,6 +116,45 @@ def delete_animal(name):
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
 @app.route("/api/animals/<name>", methods=['PUT'])
 def put_animal(name):
+    """
+    Ganzes Tier ersetzen
+    ---
+    parameters:
+        - name: name
+          in: path
+          type: string
+          required: true
+          description: Der Name des Tiers, das ersetzt werden soll
+        - in: body
+          name: tier
+          required: true
+          schema: 
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 3
+                name:
+                    type: string
+                    example: elephant
+                age:
+                    type: integer
+                    example: 20
+                genus:
+                    type: string
+                    example: mammals
+    responses:
+        200:
+            description: Tier wurde ersetzt
+            examples:
+                application/json:
+                    - message: Tier wurde ersetzt
+        404:
+            description: Tier wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Tier wurde nicht gefunden
+    """
     updated_animal = request.get_json() # in data wird das Ganze JSON-Objekt gespeichert, das vom Client im Body übergeben wird
     # Suche nach dem Objekt, das wir updaten wollen
     for animal in animals:
@@ -131,6 +170,46 @@ def put_animal(name):
 ## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
 @app.route("/api/animals/<name>", methods=["PATCH"])
 def patch_animal(name):
+    """
+    Tier teilweise ändern (z.B. nur das Alter)
+    ---
+    parameters:
+        - name: name
+          in: path
+          type: string
+          required: true
+          description: Der Name des Tiers, das ersetzt werden soll
+        - in: body
+          name: tier
+          required: anyOf
+          schema: 
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 3
+                name:
+                    type: string
+                    example: elephant
+                age:
+                    type: integer
+                    example: 20
+                genus:
+                    type: string
+                    example: mammals
+    responses:
+        200:
+            description: Tier wurde geupdated
+            examples:
+                application/json:
+                    - message: Tier wurde geupdated
+        404:
+            description: Tier wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Tier wurde nicht gefunden
+
+    """
     update_data = request.get_json()
     for animal in animals:
         if animal["name"] == name:
