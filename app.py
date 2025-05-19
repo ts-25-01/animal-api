@@ -80,7 +80,8 @@ def add_animal():
     if not new_animal:
         return f"Fehler, kein Objekt übergeben", 400
     animals.append(new_animal) # hänge das Objekt im JSON-Format hinten dran
-    return f"{new_animal} wurde erfolgreich hinzugefügt", 201
+    # return f"{new_animal} wurde erfolgreich hinzugefügt", 201
+    return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
 @app.route("/api/animals/<name>", methods=['DELETE'])
@@ -97,38 +98,47 @@ def delete_animal(name):
     responses:
         200:
             description: Tier wurde gelöscht
+            examples:
+                application/json:
+                    - message: Tier wurde gelöscht
         404:
             description: Tier wurde nicht gefunden
     """
     for animal in animals:
         if animal["name"] == name:
             animals.remove(animal)
-            return f"{name} wurde gelöscht", 200
-    return f"{name} wurde nicht gefunden", 404
+            # return f"{name} wurde gelöscht", 200
+            return jsonify({"message": "Tier wurde gelöscht"}), 200
+    # return f"{name} wurde nicht gefunden", 404
+    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
 @app.route("/api/animals/<name>", methods=['PUT'])
 def put_animal(name):
-    data = request.get_json() # in data wird das Ganze JSON-Objekt gespeichert, das vom Client im Body übergeben wird
+    updated_animal = request.get_json() # in data wird das Ganze JSON-Objekt gespeichert, das vom Client im Body übergeben wird
     # Suche nach dem Objekt, das wir updaten wollen
     for animal in animals:
         if animal["name"] == name:
             animal.clear() # Lösche alle Werte des gefundenen Tieres
-            animal.update(data) # Setze die Werte auf die Werte, die wir im JSON-Format in der Variablen data speichern
-            return f"{name} wurde geupdated", 200
-    return f"{name} wurde nicht gefunden", 404
+            animal.update(updated_animal) # Setze die Werte auf die Werte, die wir im JSON-Format in der Variablen data speichern
+            # return f"{name} wurde geupdated", 200
+            return jsonify({"message": "Tier wurde geupdated"}), 200
+    # return f"{name} wurde nicht gefunden", 404
+    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 
 ## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
 @app.route("/api/animals/<name>", methods=["PATCH"])
 def patch_animal(name):
-    data = request.get_json()
+    update_data = request.get_json()
     for animal in animals:
         if animal["name"] == name:
-            animal.update(data)
-            return f"{name} wurde geupdatet", 200
-    return f"{name} wurde nicht gefunden", 404
+            animal.update(update_data)
+            # return f"{name} wurde geupdated", 200
+            return jsonify({"message": "Tier wurde geupdated"}), 200
+    # return f"{name} wurde nicht gefunden", 404
+    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 # App starten
 if __name__ == "__main__":
