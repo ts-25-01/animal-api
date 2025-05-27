@@ -141,15 +141,6 @@ def add_animal():
     con.commit()
     con.close()
     return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
-
-
-
-
-
-
-
-
-
     # ## Funktion um die Daten im JSON-Format aus dem Request-Objekt zu bekommen
     # new_animal = request.get_json() # Hole dir aus dem Request-Objekt die Daten im JSON-Format
     # # { "id": 3, "name": .., "age": ..., "genus": ...}
@@ -160,8 +151,8 @@ def add_animal():
     # return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
-@app.route("/api/animals/<name>", methods=['DELETE'])
-def delete_animal(name):
+@app.route("/api/animals/<int:animal_id>", methods=['DELETE'])
+def delete_animal(animal_id):
     """
     Ein Tier löschen
     ---
@@ -180,13 +171,23 @@ def delete_animal(name):
         404:
             description: Tier wurde nicht gefunden
     """
-    for animal in animals:
-        if animal["name"] == name:
-            animals.remove(animal)
-            # return f"{name} wurde gelöscht", 200
-            return jsonify({"message": "Tier wurde gelöscht"}), 200
-    # return f"{name} wurde nicht gefunden", 404
-    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
+    con = get_db_connection()
+    cur = con.cursor()
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    if animal is None:
+        return jsonify({"message": "Tier mit dieser ID existiert nicht"}), 404
+    cur.execute('DELETE FROM Animals WHERE id = ?', (animal_id,))
+    con.commit()
+    con.close()
+    return jsonify({"message": "Tier wurde erfolgreich gelöscht"}), 200
+
+    # for animal in animals:
+    #     if animal["name"] == name:
+    #         animals.remove(animal)
+    #         # return f"{name} wurde gelöscht", 200
+    #         return jsonify({"message": "Tier wurde gelöscht"}), 200
+    # # return f"{name} wurde nicht gefunden", 404
+    # return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
