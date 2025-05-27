@@ -113,9 +113,6 @@ def add_animal():
           schema:
             type: object
             properties:
-                id:
-                    type: integer
-                    example: 3
                 name:
                     type: string
                     example: Elephant
@@ -131,14 +128,36 @@ def add_animal():
         400:
             description: Fehler, kein Objekt übergeben
     """
-    ## Funktion um die Daten im JSON-Format aus dem Request-Objekt zu bekommen
-    new_animal = request.get_json() # Hole dir aus dem Request-Objekt die Daten im JSON-Format
-    # { "id": 3, "name": .., "age": ..., "genus": ...}
-    if not new_animal:
-        return f"Fehler, kein Objekt übergeben", 400
-    animals.append(new_animal) # hänge das Objekt im JSON-Format hinten dran
-    # return f"{new_animal} wurde erfolgreich hinzugefügt", 201
+    new_animal = request.get_json() # {"name": "turtle", "age:": 100, "genus": "reptile"}
+    if not new_animal or 'name' not in new_animal:
+        return jsonify({"message": "Keine oder fehlerhafte Daten übertragen"}), 400
+    con = get_db_connection()
+    cur = con.cursor()
+    cur.execute('INSERT INTO Animals (name, age, genus) VALUES (?,?,?)', 
+                (new_animal['name'],
+                 new_animal['age'],
+                 new_animal['genus'])
+                ) # An dieser Stelle SQL-Befehl zum Hinzufügen des neuen Objektes
+    con.commit()
+    con.close()
     return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
+
+
+
+
+
+
+
+
+
+    # ## Funktion um die Daten im JSON-Format aus dem Request-Objekt zu bekommen
+    # new_animal = request.get_json() # Hole dir aus dem Request-Objekt die Daten im JSON-Format
+    # # { "id": 3, "name": .., "age": ..., "genus": ...}
+    # if not new_animal:
+    #     return f"Fehler, kein Objekt übergeben", 400
+    # animals.append(new_animal) # hänge das Objekt im JSON-Format hinten dran
+    # # return f"{new_animal} wurde erfolgreich hinzugefügt", 201
+    # return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
 @app.route("/api/animals/<name>", methods=['DELETE'])
