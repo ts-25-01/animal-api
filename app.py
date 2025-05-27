@@ -2,17 +2,68 @@
 from flask import Flask, jsonify, request
 # importiere Swagger vom flasgger Modul
 from flasgger import Swagger
+# importiere das sqlite3 Modul, das ist integriert in Python
+import sqlite3
 
 # initialisiere ein app-Objekt von der Klasse Flask
 app = Flask(__name__)
 # initialisiere ein swagger-Objekt von der Klasse Swagger, übergebe dabei das app-Objekt
 swagger = Swagger(app)
 
-## Tiere in einer Liste speichern -> Local Storage
-animals = [
-    { "id": 1, "name": "dog", "age": 3, "genus": "mammals"},
-    { "id": 2, "name": "cat", "age": 2, "genus": "mammals"}
-]
+# Lege Konstante an, der den Pfad zu Datenbank-Datei beschreibt
+#DATABASE_URL = "http://127.0.0.1:5432" # später wird für unsere Postgres
+DATABASE = "./animals.db" # hier liegt dann unsere DB-Datei 
+
+# Datenbank-Hilfsfunktionen
+## Funktion, um sich mit der Datenbank zu verbinden
+def get_db_connection():
+    con = sqlite3.connect(DATABASE)
+    con.row_factory = sqlite3.Row # super praktische Einstellung, damit wir Ergebnisse von SQL-Befehlen im richtigen Datenformat (Dictionary bzw. JSON-Format) zurückbekommen
+    return con
+## Funktion, um die Datenbank zu initialisieren
+# ## Tiere in einer Liste speichern -> Local Storage
+# animals = [
+#     { "id": 1, "name": "dog", "age": 3, "genus": "mammals"},
+#     { "id": 2, "name": "cat", "age": 2, "genus": "mammals"}
+# ]
+# Seeding-Skript für die Datenbank
+def init_db():
+    # Initialisieren der DB
+    con = get_db_connection() # rufe Hilfsfunktion auf
+    cur = con.cursor()
+    cur.execute('''
+                CREATE TABLE IF NOT EXISTS Animals (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    age INTEGER,
+                    genus TEXT    
+                )
+                ''')
+    # Überprüfe, ob Zeilen, also Datensätze in der Animals-Tabelle drin sind
+    # cur.execute('SELECT COUNT(*) FROM Animals')
+    # count = cur.fetchone()[0]
+    count = cur.execute('SELECT COUNT(*) FROM Animals').fetchone()[0]
+    if count == 0:
+        data = [
+            ('dog', 3, 'mammals'),
+            ('cat', 2, 'mammals'),
+            ('elephant', 20, 'mammals'),
+            ('bird', 5, 'birds')
+        ]
+        cur.executemany('INSERT INTO Animals (name, age, genus) VALUES (?,?,?)', data) # das geht er jeweils für jeden Eintrag der data durch
+        con.commit()
+    con.close()
+
+    
+    
+    
+    
+    
+    
+    #cur = con.cursor()
+    #cur.execute("CREATE TABLE Animals ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER, mammals TEXT)")
+ 
+
 
 ## Test-Route für Startseite
 @app.route("/")
@@ -39,7 +90,11 @@ def show_animals():
                       age: 2
                       genus: mammals
     """
-    return jsonify(animals), 200
+    # # Daten abrufen von der DB
+    # return jsonify(animals), 200
+    con = get_db_connection() # Verbindung mit der DB
+    cur = con.cursor()
+    cur.execute('SELECT * FROM Animals')
 
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
 @app.route("/api/animals", methods=['POST'])
@@ -221,4 +276,5 @@ def patch_animal(name):
 
 # App starten
 if __name__ == "__main__":
+    init_db()
     app.run(host="127.0.0.1", port=5050, debug=True)
