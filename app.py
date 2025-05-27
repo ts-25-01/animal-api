@@ -94,7 +94,9 @@ def show_animals():
     # return jsonify(animals), 200
     con = get_db_connection() # Verbindung mit der DB
     cur = con.cursor()
-    cur.execute('SELECT * FROM Animals')
+    animals = cur.execute('SELECT * FROM Animals').fetchall()
+    con.close()
+    return jsonify([dict(animal) for animal in animals]), 200
 
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
 @app.route("/api/animals", methods=['POST'])
