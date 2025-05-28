@@ -20,13 +20,8 @@ def get_db_connection():
     con = sqlite3.connect(DATABASE)
     con.row_factory = sqlite3.Row # super praktische Einstellung, damit wir Ergebnisse von SQL-Befehlen im richtigen Datenformat (Dictionary bzw. JSON-Format) zurückbekommen
     return con
-## Funktion, um die Datenbank zu initialisieren
-# ## Tiere in einer Liste speichern -> Local Storage
-# animals = [
-#     { "id": 1, "name": "dog", "age": 3, "genus": "mammals"},
-#     { "id": 2, "name": "cat", "age": 2, "genus": "mammals"}
-# ]
 # Seeding-Skript für die Datenbank
+## Funktion, um die Datenbank zu initialisieren
 def init_db():
     # Initialisieren der DB
     con = get_db_connection() # rufe Hilfsfunktion auf
@@ -40,9 +35,7 @@ def init_db():
                 )
                 ''')
     # Überprüfe, ob Zeilen, also Datensätze in der Animals-Tabelle drin sind
-    # cur.execute('SELECT COUNT(*) FROM Animals')
-    # count = cur.fetchone()[0]
-    count = cur.execute('SELECT COUNT(*) FROM Animals').fetchone()[0]
+    count = cur.execute('SELECT COUNT(*) FROM Animals').fetchone()[0] # gibt uns ein Tupel zurück z.B. (1,), aber mit [0] greifen wir nur auf den ersten Index des Tupels zu
     if count == 0:
         data = [
             ('dog', 3, 'mammals'),
@@ -51,20 +44,8 @@ def init_db():
             ('bird', 5, 'birds')
         ]
         cur.executemany('INSERT INTO Animals (name, age, genus) VALUES (?,?,?)', data) # das geht er jeweils für jeden Eintrag der data durch
-        con.commit()
+        con.commit() # an dieser Stelle werden die Änderungen persistiert und gespeichert, d.h. Transaktion wird abgeschlossen
     con.close()
-
-    
-    
-    
-    
-    
-    
-    #cur = con.cursor()
-    #cur.execute("CREATE TABLE Animals ( id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, age INTEGER, mammals TEXT)")
- 
-
-
 ## Test-Route für Startseite
 @app.route("/")
 def home():
@@ -90,8 +71,7 @@ def show_animals():
                       age: 2
                       genus: mammals
     """
-    # # Daten abrufen von der DB
-    # return jsonify(animals), 200
+    # Daten abrufen von der DB
     con = get_db_connection() # Verbindung mit der DB
     cur = con.cursor()
     animals = cur.execute('SELECT * FROM Animals').fetchall()
@@ -131,24 +111,17 @@ def add_animal():
     new_animal = request.get_json() # {"name": "turtle", "age:": 100, "genus": "reptile"}
     if not new_animal or 'name' not in new_animal:
         return jsonify({"message": "Keine oder fehlerhafte Daten übertragen"}), 400
-    con = get_db_connection()
-    cur = con.cursor()
+    con = get_db_connection() # Schritt 1: DB-Verbindung
+    cur = con.cursor() # Schritt 2: Cursor-Objekt definieren
+    # Schritt 3: Befehl ausführen
     cur.execute('INSERT INTO Animals (name, age, genus) VALUES (?,?,?)', 
                 (new_animal['name'],
                  new_animal['age'],
                  new_animal['genus'])
                 ) # An dieser Stelle SQL-Befehl zum Hinzufügen des neuen Objektes
-    con.commit()
-    con.close()
+    con.commit() # Schritt 4: Persistieren der Veränderungen
+    con.close() # Schritt 5: Verbindung zur DB wieder schließen
     return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
-    # ## Funktion um die Daten im JSON-Format aus dem Request-Objekt zu bekommen
-    # new_animal = request.get_json() # Hole dir aus dem Request-Objekt die Daten im JSON-Format
-    # # { "id": 3, "name": .., "age": ..., "genus": ...}
-    # if not new_animal:
-    #     return f"Fehler, kein Objekt übergeben", 400
-    # animals.append(new_animal) # hänge das Objekt im JSON-Format hinten dran
-    # # return f"{new_animal} wurde erfolgreich hinzugefügt", 201
-    # return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
 @app.route("/api/animals/<int:animal_id>", methods=['DELETE'])
@@ -157,9 +130,9 @@ def delete_animal(animal_id):
     Ein Tier löschen
     ---
     parameters:
-        - name: name
+        - name: id
           in: path
-          type: string
+          type: integer
           required: true
           description: Der Name des zu löschenden Tieres
     responses:
@@ -171,23 +144,18 @@ def delete_animal(animal_id):
         404:
             description: Tier wurde nicht gefunden
     """
-    con = get_db_connection()
+    con = get_db_connection() 
     cur = con.cursor()
-    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    # Überprüfe, ob das Tier mit der angegebenen ID überhaupt existiert
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone() # 4 OR 1=! --
     if animal is None:
         return jsonify({"message": "Tier mit dieser ID existiert nicht"}), 404
-    cur.execute('DELETE FROM Animals WHERE id = ?', (animal_id,))
+    cur.execute('DELETE FROM Animals WHERE id = ?', (animal_id,) )
+    ## Achtung: Nutz bitte die ?-Funktion, um SQL-Injection zu verhindern, sonst sähe es so aus:
+    # cur.execute(f'DELETE FROM Animals WHERE id = {animal_id}') # 4 OR 1=! --
     con.commit()
     con.close()
     return jsonify({"message": "Tier wurde erfolgreich gelöscht"}), 200
-
-    # for animal in animals:
-    #     if animal["name"] == name:
-    #         animals.remove(animal)
-    #         # return f"{name} wurde gelöscht", 200
-    #         return jsonify({"message": "Tier wurde gelöscht"}), 200
-    # # return f"{name} wurde nicht gefunden", 404
-    # return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
