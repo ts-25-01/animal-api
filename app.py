@@ -159,26 +159,23 @@ def delete_animal(animal_id):
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
-@app.route("/api/animals/<name>", methods=['PUT'])
-def put_animal(name):
+@app.route("/api/animals/<int:animal_id>", methods=['PUT'])
+def put_animal(animal_id):
     """
     Ganzes Tier ersetzen
     ---
     parameters:
-        - name: name
+        - name: id
           in: path
-          type: string
+          type: integer
           required: true
-          description: Der Name des Tiers, das ersetzt werden soll
+          description: Die ID des Tiers, das ersetzt werden soll
         - in: body
           name: tier
           required: true
           schema: 
             type: object
             properties:
-                id:
-                    type: integer
-                    example: 3
                 name:
                     type: string
                     example: elephant
@@ -200,21 +197,26 @@ def put_animal(name):
                 application/json:
                     - message: Tier wurde nicht gefunden
     """
-    updated_animal = request.get_json() # in data wird das Ganze JSON-Objekt gespeichert, das vom Client im Body übergeben wird
-    # Suche nach dem Objekt, das wir updaten wollen
-    for animal in animals:
-        if animal["name"] == name:
-            animal.clear() # Lösche alle Werte des gefundenen Tieres
-            animal.update(updated_animal) # Setze die Werte auf die Werte, die wir im JSON-Format in der Variablen data speichern
-            # return f"{name} wurde geupdated", 200
-            return jsonify({"message": "Tier wurde geupdated"}), 200
-    # return f"{name} wurde nicht gefunden", 404
-    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
+    updated_animal = request.get_json() # Speichere dir das Objekt im Body aus dem Request des Clients
+    if not updated_animal or 'name' not in updated_animal:
+        return jsonify({"message": "Fehlende Daten"}), 400
+    # Überprüfe, ob das Tier überhaupt existiert in der DB mit dieser ID
+    con = get_db_connection() # Schritt 1
+    cur = con.cursor() # Schritt 2
+    # Schritt 3
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    if animal is None:
+        return jsonify({"message": "Tier mit dieser ID ist nicht in der DB"}), 404
+    # Update jetzt das Tier mit der übergebenen ID und mit den übergebenen Daten
+    cur.execute('UPDATE Animals SET name = ?, age = ?, genus = ? WHERE id = ?', (updated_animal['name'], updated_animal['age'], updated_animal['genus'], animal_id))
+    con.commit()
+    con.close()
+    return jsonify({"message": "Tier wurde komplett aktualisiert"}), 200
 
 
 ## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
-@app.route("/api/animals/<name>", methods=["PATCH"])
-def patch_animal(name):
+@app.route("/api/animals/<int:animal_id>", methods=["PATCH"])
+def patch_animal(animal_id):
     """
     Tier teilweise ändern (z.B. nur das Alter)
     ---
@@ -255,14 +257,42 @@ def patch_animal(name):
                     - message: Tier wurde nicht gefunden
 
     """
-    update_data = request.get_json()
-    for animal in animals:
-        if animal["name"] == name:
-            animal.update(update_data)
-            # return f"{name} wurde geupdated", 200
-            return jsonify({"message": "Tier wurde geupdated"}), 200
-    # return f"{name} wurde nicht gefunden", 404
-    return jsonify({"message": "Tier wurde nicht gefunden"}), 404
+    updated_animal = request.get_json() # name, age, genus
+    if not updated_animal:
+        return jsonify({"message": "Fehlende Daten"}), 400
+    con = get_db_connection()
+    cur = con.cursor()
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    if animal is None:
+        return jsonify({"message": "Tier mit dieser ID ist nicht in der DB"}), 404
+    # Leere Liste, wo wir die Felder mitgeben, die wir speziell updaten wollen
+    update_fields = [] # Notizzettel, wo wir alle Spalten reinschreiben, die der Client updaten möchte, z.B. nur name: elephant Joel, age = 24
+    # Leere Liste, wo wir die Werte der Felder mitgeben, die wir updaten wollen
+    update_values = [] # Notizzettel, wo wir die entsprechenden Werte reinschreiben von den Spalten, die wir aktualisieren wollen
+
+    for field in ['name', 'age', 'genus']: # Iteriere über alle möglichen, vorhandenen Spalte der Tabelle
+        if field in updated_animal:
+            update_fields.append(f'{field} = ?') # name = ?, age = ?
+            update_values.append(updated_animal[field]) # elephant Joel, 24
+    
+    if update_fields:
+        update_values.append(animal_id)
+        query = f'UPDATE Animals SET {", ".join(update_fields)} WHERE id = ?' # UPDATE Animals SET name = ?, age = ? WHERE id = ?
+        cur.execute(query, update_values)
+        con.commit()
+    con.close()
+    return jsonify({"message": "Tier wurde geupdated"}), 200
+
+
+
+    # update_data = request.get_json()
+    # for animal in animals:
+    #     if animal["name"] == name:
+    #         animal.update(update_data)
+    #         # return f"{name} wurde geupdated", 200
+    #         return jsonify({"message": "Tier wurde geupdated"}), 200
+    # # return f"{name} wurde nicht gefunden", 404
+    # return jsonify({"message": "Tier wurde nicht gefunden"}), 404
 
 # App starten
 if __name__ == "__main__":
