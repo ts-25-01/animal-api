@@ -78,6 +78,48 @@ def show_animals():
     con.close()
     return jsonify([dict(animal) for animal in animals]), 200
 
+
+## GET-Route implementieren, um Daten von einem Tier anzuzeigen
+@app.route("/api/animals/<int:animal_id>", methods=['GET'])
+def show_animal(animal_id):
+    """
+    Liste aller Tiere
+    ---
+        parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+          description: Der Name des anzuzeigenden Tieres
+    responses:
+        200:
+            description: JSON-Objekt von einem Tier
+            examples:
+                application/json:
+                    - id: 1
+                      name: Dog
+                      age: 3
+                      genus: mammals
+                    - id: 2
+                      name: Cat
+                      age: 2
+                      genus: mammals
+    """
+    con = get_db_connection()
+    cur = con.cursor()
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    if animal is None:
+        return jsonify({"message": "Tier mit der ID existiert nicht"}), 404
+    con.commit()
+    con.close()
+    return jsonify(dict(animal)), 200
+    # # Daten abrufen von der DB
+    # con = get_db_connection() # Verbindung mit der DB
+    # cur = con.cursor()
+    # animals = cur.execute('SELECT * FROM Animals').fetchall()
+    # con.close()
+    # return jsonify([dict(animal) for animal in animals]), 200
+
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
 @app.route("/api/animals", methods=['POST'])
 def add_animal():
