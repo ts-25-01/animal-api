@@ -97,6 +97,33 @@ def show_animals():
     con.close()
     return jsonify([dict(animal) for animal in animals]), 200
 
+## GET-Route implementieren, d.h. Daten abrufen bzw. alle Owner anzeigen
+@app.route("/api/owners", methods=['GET'])
+def show_owners():
+    """
+    Liste aller Owner
+    ---
+    responses:
+        200:
+            description: JSON-Liste aller Owner
+            examples:
+                application/json:
+                    - id: 1
+                      name: Max Mustermann
+                      email: max_mustermann@email.de
+                      phone: 01234 56789
+                    - id: 2
+                      name: Anna Schmidt
+                      email: anna_schmidt@email.de
+                      phone: 0987 65432
+    """
+    # Daten abrufen von der DB
+    con = get_db_connection() # Verbindung mit der DB
+    cur = con.cursor()
+    owners = cur.execute('SELECT * FROM Owners').fetchall()
+    con.close()
+    return jsonify([dict(owner) for owner in owners]), 200
+
 
 ## GET-Route implementieren, um Daten von einem Tier anzuzeigen
 @app.route("/api/animals/<int:animal_id>", methods=['GET'])
@@ -119,10 +146,7 @@ def show_animal(animal_id):
                       name: Dog
                       age: 3
                       genus: mammals
-                    - id: 2
-                      name: Cat
-                      age: 2
-                      genus: mammals
+                 
     """
     con = get_db_connection()
     cur = con.cursor()
@@ -132,12 +156,38 @@ def show_animal(animal_id):
     con.commit()
     con.close()
     return jsonify(dict(animal)), 200
-    # # Daten abrufen von der DB
-    # con = get_db_connection() # Verbindung mit der DB
-    # cur = con.cursor()
-    # animals = cur.execute('SELECT * FROM Animals').fetchall()
-    # con.close()
-    # return jsonify([dict(animal) for animal in animals]), 200
+
+## GET-Route implementieren, um Daten von einem Owner anzuzeigen
+@app.route("/api/owners/<int:owner_id>", methods=['GET'])
+def show_owner(owner_id):
+    """
+    Liste eines Owners
+    ---
+        parameters:
+        - name: id
+          in: path
+          type: integer
+          required: true
+          description: Der Name des anzuzeigenden Owners
+    responses:
+        200:
+            description: JSON-Objekt von einem Owner
+            examples:
+                application/json:
+                    - id: 1
+                      name: Max Mustermann
+                      email: max_mustermann@email.de 
+                      phone: 01234 56789
+                   
+    """
+    con = get_db_connection()
+    cur = con.cursor()
+    owner = cur.execute('SELECT * FROM Owners WHERE id = ?', (owner_id,)).fetchone()
+    if owner is None:
+        return jsonify({"message": "Besitzer mit der ID existiert nicht"}), 404
+    con.commit()
+    con.close()
+    return jsonify(dict(owner)), 200
 
 ## POST-Route implementieren, d.h. neue Tier hinzufügen
 @app.route("/api/animals", methods=['POST'])
