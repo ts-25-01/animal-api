@@ -129,9 +129,9 @@ def show_owners():
 @app.route("/api/animals/<int:animal_id>", methods=['GET'])
 def show_animal(animal_id):
     """
-    Liste aller Tiere
+    Anzeigen eines Tieres
     ---
-        parameters:
+    parameters:
         - name: id
           in: path
           type: integer
@@ -146,7 +146,6 @@ def show_animal(animal_id):
                       name: Dog
                       age: 3
                       genus: mammals
-                 
     """
     con = get_db_connection()
     cur = con.cursor()
@@ -161,9 +160,9 @@ def show_animal(animal_id):
 @app.route("/api/owners/<int:owner_id>", methods=['GET'])
 def show_owner(owner_id):
     """
-    Liste eines Owners
+    Anzeigen eines Owners
     ---
-        parameters:
+    parameters:
         - name: id
           in: path
           type: integer
@@ -178,7 +177,6 @@ def show_owner(owner_id):
                       name: Max Mustermann
                       email: max_mustermann@email.de 
                       phone: 01234 56789
-                   
     """
     con = get_db_connection()
     cur = con.cursor()
@@ -215,7 +213,7 @@ def add_animal():
                     example: mammals
     responses:
         201:
-            description: Name wurde erfolgreich hinzugefügt
+            description: Tier wurde erfolgreich hinzugefügt
         400:
             description: Fehler, kein Objekt übergeben
     """
@@ -234,6 +232,50 @@ def add_animal():
     con.close() # Schritt 5: Verbindung zur DB wieder schließen
     return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
+@app.route("/api/owners", methods=['POST'])
+def add_owner():
+    """
+    Neuen Owner hinzufügen
+    ---
+    consumes:
+        - application/json
+    parameters:
+        - in: body
+          name: owner
+          required: true
+          schema:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: Max Mustermann
+                email:
+                    type: string
+                    example: max@email.com
+                phone:
+                    type: string
+                    example: 0123 456789
+    responses:
+        201:
+            description: Besitzer wurde erfolgreich hinzugefügt
+        400:
+            description: Keine oder fehlerhafte Daten übertragen
+    """
+    new_owner = request.get_json()
+    if not new_owner or 'name' not in new_owner:
+        return jsonify({"message": "Keine oder fehlerhafte Daten übertragen"}), 400
+    con = get_db_connection() # Schritt 1: DB-Verbindung
+    cur = con.cursor() # Schritt 2: Cursor-Objekt definieren
+    # Schritt 3: Befehl ausführen
+    cur.execute('INSERT INTO Owners (name, email, phone) VALUES (?,?,?)', 
+                (new_owner['name'],
+                 new_owner['email'],
+                 new_owner['phone'])
+                ) # An dieser Stelle SQL-Befehl zum Hinzufügen des neuen Objektes
+    con.commit() # Schritt 4: Persistieren der Veränderungen
+    con.close() # Schritt 5: Verbindung zur DB wieder schließen
+    return jsonify({"message": "Besitzer wurde erfolgreich hinzugefügt"}), 201
+
 ## DELETE-Route, um ein Tier aus der Liste zu löschen
 @app.route("/api/animals/<int:animal_id>", methods=['DELETE'])
 def delete_animal(animal_id):
@@ -241,11 +283,11 @@ def delete_animal(animal_id):
     Ein Tier löschen
     ---
     parameters:
-        - name: id
+        - name: animal_id
           in: path
           type: integer
           required: true
-          description: Der Name des zu löschenden Tieres
+          description: Die ID des zu löschenden Tieres
     responses:
         200:
             description: Tier wurde gelöscht
@@ -267,6 +309,37 @@ def delete_animal(animal_id):
     con.commit()
     con.close()
     return jsonify({"message": "Tier wurde erfolgreich gelöscht"}), 200
+
+@app.route("/api/owners/<int:owner_id>", methods=['DELETE'])
+def delete_owner(owner_id):
+    """
+    Einen Besitzer löschen
+    ---
+    parameters:
+        - name: owner_id
+          in: path
+          type: integer
+          required: true
+          description: Die ID des zu löschenden Besitzers
+    responses:
+        200:
+            description: Besitzer wurde gelöscht
+            examples:
+                application/json:
+                    - message: Besitzer wurde gelöscht
+        404:
+            description: Besitzer wurde nicht gefunden
+    """
+    con = get_db_connection() 
+    cur = con.cursor()
+    # Überprüfe, ob das Tier mit der angegebenen ID überhaupt existiert
+    owner = cur.execute('SELECT * FROM Owners WHERE id = ?', (owner_id,)).fetchone() # 4 OR 1=! --
+    if owner is None:
+        return jsonify({"message": "Besitzer mit dieser ID existiert nicht"}), 404
+    cur.execute('DELETE FROM Owners WHERE id = ?', (owner_id,) )
+    con.commit()
+    con.close()
+    return jsonify({"message": "Besitzer wurde erfolgreich gelöscht"}), 200
 
 ## Baue eine Funktion, zum Updaten
 ## PUT-Route -> Ersetze alle Eigenschaften eines Tieres, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
@@ -366,7 +439,6 @@ def patch_animal(animal_id):
             examples:
                 application/json:
                     - message: Tier wurde nicht gefunden
-
     """
     updated_animal = request.get_json() # name, age, genus
     if not updated_animal:
