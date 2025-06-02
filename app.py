@@ -101,11 +101,11 @@ def show_animals():
 @app.route("/api/owners", methods=['GET'])
 def show_owners():
     """
-    Liste aller Owner
+    Liste aller Besitzer
     ---
     responses:
         200:
-            description: JSON-Liste aller Owner
+            description: JSON-Liste aller Besitzer
             examples:
                 application/json:
                     - id: 1
@@ -132,11 +132,11 @@ def show_animal(animal_id):
     Anzeigen eines Tieres
     ---
     parameters:
-        - name: id
+        - name: animal_id
           in: path
           type: integer
           required: true
-          description: Der Name des anzuzeigenden Tieres
+          description: Die ID des anzuzeigenden Tieres
     responses:
         200:
             description: JSON-Objekt von einem Tier
@@ -146,12 +146,17 @@ def show_animal(animal_id):
                       name: Dog
                       age: 3
                       genus: mammals
+        404:
+            description: Tier wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Tier mit der ID 7 existiert nicht
     """
     con = get_db_connection()
     cur = con.cursor()
     animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
     if animal is None:
-        return jsonify({"message": "Tier mit der ID existiert nicht"}), 404
+        return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
     con.commit()
     con.close()
     return jsonify(dict(animal)), 200
@@ -160,29 +165,34 @@ def show_animal(animal_id):
 @app.route("/api/owners/<int:owner_id>", methods=['GET'])
 def show_owner(owner_id):
     """
-    Anzeigen eines Owners
+    Anzeigen eines Besitzers
     ---
     parameters:
-        - name: id
+        - name: owner_id
           in: path
           type: integer
           required: true
-          description: Der Name des anzuzeigenden Owners
+          description: Die ID des anzuzeigenden Besitzers
     responses:
         200:
-            description: JSON-Objekt von einem Owner
+            description: JSON-Objekt von einem Besitzer
             examples:
                 application/json:
                     - id: 1
                       name: Max Mustermann
                       email: max_mustermann@email.de 
                       phone: 01234 56789
+        404:
+            description: Besitzer wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Besitzer mit der ID 5 existiert nicht
     """
     con = get_db_connection()
     cur = con.cursor()
     owner = cur.execute('SELECT * FROM Owners WHERE id = ?', (owner_id,)).fetchone()
     if owner is None:
-        return jsonify({"message": "Besitzer mit der ID existiert nicht"}), 404
+        return jsonify({"message": f"Besitzer mit der ID {owner_id} existiert nicht"}), 404
     con.commit()
     con.close()
     return jsonify(dict(owner)), 200
@@ -213,9 +223,15 @@ def add_animal():
                     example: mammals
     responses:
         201:
-            description: Tier wurde erfolgreich hinzugefügt
+            description: Tier hinzugefügt
+            examples:
+                application/json:
+                    - message: Tier wurde erfolgreich hinzugefügt
         400:
-            description: Fehler, kein Objekt übergeben
+            description: Keine oder fehlerhafte Daten
+            examples:
+                application/json:
+                    - message: Keine oder fehlerhafte Daten übertragen
     """
     new_animal = request.get_json() # {"name": "turtle", "age:": 100, "genus": "reptile"}
     if not new_animal or 'name' not in new_animal:
@@ -258,8 +274,14 @@ def add_owner():
     responses:
         201:
             description: Besitzer wurde erfolgreich hinzugefügt
+            examples:
+                application/json:
+                    - message: Besitzer wurde erfolgreich hinzugefügt
         400:
             description: Keine oder fehlerhafte Daten übertragen
+            examples:
+                application/json:
+                    - message: Keine oder fehlerhafte Daten übertragen
     """
     new_owner = request.get_json()
     if not new_owner or 'name' not in new_owner:
@@ -293,16 +315,19 @@ def delete_animal(animal_id):
             description: Tier wurde gelöscht
             examples:
                 application/json:
-                    - message: Tier wurde gelöscht
+                    - message: Tier wurde erfolgreich gelöscht
         404:
             description: Tier wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Tier mit der ID 7 existiert nicht
     """
     con = get_db_connection() 
     cur = con.cursor()
     # Überprüfe, ob das Tier mit der angegebenen ID überhaupt existiert
     animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone() # 4 OR 1=! --
     if animal is None:
-        return jsonify({"message": "Tier mit dieser ID existiert nicht"}), 404
+        return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
     cur.execute('DELETE FROM Animals WHERE id = ?', (animal_id,) )
     ## Achtung: Nutz bitte die ?-Funktion, um SQL-Injection zu verhindern, sonst sähe es so aus:
     # cur.execute(f'DELETE FROM Animals WHERE id = {animal_id}') # 4 OR 1=! --
@@ -326,9 +351,12 @@ def delete_owner(owner_id):
             description: Besitzer wurde gelöscht
             examples:
                 application/json:
-                    - message: Besitzer wurde gelöscht
+                    - message: Besitzer wurde erfolgreich gelöscht
         404:
             description: Besitzer wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Besitzer mit der ID 5 existiert nicht
     """
     con = get_db_connection() 
     cur = con.cursor()
@@ -349,7 +377,7 @@ def put_animal(animal_id):
     Ganzes Tier ersetzen
     ---
     parameters:
-        - name: id
+        - name: animal_id
           in: path
           type: integer
           required: true
@@ -374,12 +402,12 @@ def put_animal(animal_id):
             description: Tier wurde ersetzt
             examples:
                 application/json:
-                    - message: Tier wurde ersetzt
+                    - message: Tier wurde komplett aktualisiert
         404:
             description: Tier wurde nicht gefunden
             examples:
                 application/json:
-                    - message: Tier wurde nicht gefunden
+                    - message: Tier mit der ID 7 existiert nicht
     """
     updated_animal = request.get_json() # Speichere dir das Objekt im Body aus dem Request des Clients
     if not updated_animal or 'name' not in updated_animal:
@@ -390,7 +418,7 @@ def put_animal(animal_id):
     # Schritt 3
     animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
     if animal is None:
-        return jsonify({"message": "Tier mit dieser ID ist nicht in der DB"}), 404
+        return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
     # Update jetzt das Tier mit der übergebenen ID und mit den übergebenen Daten
     cur.execute('UPDATE Animals SET name = ?, age = ?, genus = ? WHERE id = ?', (updated_animal['name'], updated_animal['age'], updated_animal['genus'], animal_id))
     con.commit()
@@ -405,11 +433,11 @@ def patch_animal(animal_id):
     Tier teilweise ändern (z.B. nur das Alter)
     ---
     parameters:
-        - name: name
+        - name: animal_id
           in: path
-          type: string
+          type: integer
           required: true
-          description: Der Name des Tiers, das ersetzt werden soll
+          description: Die ID des Tiers, das ersetzt werden soll
         - in: body
           name: tier
           required: anyOf
@@ -438,7 +466,7 @@ def patch_animal(animal_id):
             description: Tier wurde nicht gefunden
             examples:
                 application/json:
-                    - message: Tier wurde nicht gefunden
+                    - message: Tier mit der ID 7 existiert nicht
     """
     updated_animal = request.get_json() # name, age, genus
     if not updated_animal:
@@ -447,7 +475,7 @@ def patch_animal(animal_id):
     cur = con.cursor()
     animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
     if animal is None:
-        return jsonify({"message": "Tier mit dieser ID ist nicht in der DB"}), 404
+        return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
     # Leere Liste, wo wir die Felder mitgeben, die wir speziell updaten wollen
     update_fields = [] # Notizzettel, wo wir alle Spalten reinschreiben, die der Client updaten möchte, z.B. nur name: elephant Joel, age = 24
     # Leere Liste, wo wir die Werte der Felder mitgeben, die wir updaten wollen
