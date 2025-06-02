@@ -34,9 +34,17 @@ def init_db():
                     genus TEXT    
                 )
                 ''')
+    cur.execute('''
+                CREATE TABLE IF NOT EXISTS Owners (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    email TEXT,
+                    phone TEXT
+                )
+                ''')
     # Überprüfe, ob Zeilen, also Datensätze in der Animals-Tabelle drin sind
-    count = cur.execute('SELECT COUNT(*) FROM Animals').fetchone()[0] # gibt uns ein Tupel zurück z.B. (1,), aber mit [0] greifen wir nur auf den ersten Index des Tupels zu
-    if count == 0:
+    animal_count = cur.execute('SELECT COUNT(*) FROM Animals').fetchone()[0] # gibt uns ein Tupel zurück z.B. (1,), aber mit [0] greifen wir nur auf den ersten Index des Tupels zu
+    if animal_count == 0:
         data = [
             ('dog', 3, 'mammals'),
             ('cat', 2, 'mammals'),
@@ -45,6 +53,17 @@ def init_db():
         ]
         cur.executemany('INSERT INTO Animals (name, age, genus) VALUES (?,?,?)', data) # das geht er jeweils für jeden Eintrag der data durch
         con.commit() # an dieser Stelle werden die Änderungen persistiert und gespeichert, d.h. Transaktion wird abgeschlossen
+    # Wiederhole für Owner:
+    owner_count = cur.execute('SELECT COUNT(*) FROM Owners').fetchone()[0] # gibt uns ein Tupel zurück z.B. (1,), aber mit [0] greifen wir nur auf den ersten Index des Tupels zu
+    if owner_count == 0:
+        data = [
+            ('Max Mustermann', 'max@email.com', '0123 456789'),
+            ('Anna Schmidt', 'schmidty@mail.de', '01896 128842'),
+            ('Tom Weber', 'weberknecht@spinne.at', '0189 5868463')
+        ]
+        cur.executemany('INSERT INTO Owners (name, email, phone) VALUES (?,?,?)', data) # das geht er jeweils für jeden Eintrag der data durch
+        con.commit() # an dieser Stelle werden die Änderungen persistiert und gespeichert, d.h. Transaktion wird abgeschlossen
+    
     con.close()
 ## Test-Route für Startseite
 @app.route("/")
