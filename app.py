@@ -251,13 +251,13 @@ def add_animal():
 @app.route("/api/owners", methods=['POST'])
 def add_owner():
     """
-    Neuen Owner hinzufügen
+    Neuen Besitzer hinzufügen
     ---
     consumes:
         - application/json
     parameters:
         - in: body
-          name: owner
+          name: Besitzer
           required: true
           schema:
             type: object
@@ -399,7 +399,7 @@ def put_animal(animal_id):
                     example: mammals
     responses:
         200:
-            description: Tier wurde ersetzt
+            description: Tier wurde aktualisiert
             examples:
                 application/json:
                     - message: Tier wurde komplett aktualisiert
@@ -425,6 +425,60 @@ def put_animal(animal_id):
     con.close()
     return jsonify({"message": "Tier wurde komplett aktualisiert"}), 200
 
+## PUT-Route -> Ersetze alle Eigenschaften eines Besitzers, d.h. hier schicken wir alle Eigenschaften im Body als JSON mit
+@app.route("/api/owners/<int:owner_id>", methods=['PUT'])
+def put_owner(owner_id):
+    """
+    Besitzer aktualisieren im Ganzen
+    ---
+    parameters:
+        - name: owner_id
+          in: path
+          type: integer
+          required: true
+          description: Die ID des Besitzers, der ersetzt werden soll
+        - in: body
+          name: tier
+          required: true
+          schema: 
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: max mustermann
+                email:
+                    type: string
+                    example: max@mail.de
+                phone:
+                    type: string
+                    example: 0123 456789
+    responses:
+        200:
+            description: Besitzer wurde aktualisiert
+            examples:
+                application/json:
+                    - message: Besitzer wurde komplett aktualisiert
+        404:
+            description: Besitzer wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Besitzer mit der ID 7 existiert nicht
+    """
+    updated_owner = request.get_json() # Speichere dir das Objekt im Body aus dem Request des Clients
+    if not updated_owner or 'name' not in updated_owner:
+        return jsonify({"message": "Fehlende Daten"}), 400
+    con = get_db_connection() # Schritt 1
+    cur = con.cursor() # Schritt 2
+    # Schritt 3
+    owner = cur.execute('SELECT * FROM Owners WHERE id = ?', (owner_id,)).fetchone()
+    if owner is None:
+        return jsonify({"message": f"Besitzer mit der ID {owner_id} existiert nicht"}), 404
+    # Update jetzt den Besitzer mit der übergebenen ID und mit den übergebenen Daten
+    cur.execute('UPDATE Owners SET name = ?, email = ?, phone = ? WHERE id = ?', (updated_owner['name'], updated_owner['email'], updated_owner['phone'], owner_id))
+    con.commit()
+    con.close()
+    return jsonify({"message": "Besitzer wurde komplett aktualisiert"}), 200
+
 
 ## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
 @app.route("/api/animals/<int:animal_id>", methods=["PATCH"])
@@ -437,7 +491,7 @@ def patch_animal(animal_id):
           in: path
           type: integer
           required: true
-          description: Die ID des Tiers, das ersetzt werden soll
+          description: Die ID des Tiers, das aktualisiert werden soll
         - in: body
           name: tier
           required: anyOf
@@ -493,6 +547,75 @@ def patch_animal(animal_id):
         con.commit()
     con.close()
     return jsonify({"message": "Tier wurde geupdated"}), 200
+
+## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
+## Owners
+@app.route("/api/owners/<int:owner_id>", methods=["PATCH"])
+def patch_owner(owner_id):
+    """
+    Besitzer teilweise ändern (z.B. nur die Email)
+    ---
+    parameters:
+        - name: owner_id
+          in: path
+          type: integer
+          required: true
+          description: Die ID des Besitzers, der aktualisiert werden soll
+        - in: body
+          name: besitzer
+          required: anyOf
+          schema: 
+            type: object
+            properties:
+                id:
+                    type: integer
+                    example: 3
+                name:
+                    type: string
+                    example: lisa schmidt
+                email:
+                    type: string
+                    example: lisaschmidt@mail.de
+                phone:
+                    type: string
+                    example: 012-2345
+    responses:
+        200:
+            description: Besitzer wurde geupdated
+            examples:
+                application/json:
+                    - message: Besitzer wurde geupdated
+        404:
+            description: Besitzer wurde nicht gefunden
+            examples:
+                application/json:
+                    - message: Besitzer mit der ID 7 existiert nicht
+    """
+    updated_owner = request.get_json()
+    if not updated_owner:
+        return jsonify({"message": "Fehlende Daten"}), 400
+    con = get_db_connection()
+    cur = con.cursor()
+    owner = cur.execute('SELECT * FROM Owners WHERE id = ?', (owner_id,)).fetchone()
+    if owner is None:
+        return jsonify({"message": f"Besitzer mit der ID {owner_id} existiert nicht"}), 404
+    # Leere Liste, wo wir die Felder mitgeben, die wir speziell updaten wollen
+    update_fields = [] # Notizzettel, wo wir alle Spalten reinschreiben, die der Client updaten möchte, z.B. nur name: elephant Joel, age = 24
+    # Leere Liste, wo wir die Werte der Felder mitgeben, die wir updaten wollen
+    update_values = [] # Notizzettel, wo wir die entsprechenden Werte reinschreiben von den Spalten, die wir aktualisieren wollen
+
+    for field in ['name', 'email', 'phone']: # Iteriere über alle möglichen, vorhandenen Spalte der Tabelle
+        if field in updated_owner:
+            update_fields.append(f'{field} = ?') # name = ?, age = ?
+            update_values.append(updated_owner[field]) # elephant Joel, 24
+    
+    if update_fields:
+        update_values.append(owner_id)
+        query = f'UPDATE Owners SET {", ".join(update_fields)} WHERE id = ?'
+        cur.execute(query, update_values)
+        con.commit()
+    con.close()
+    return jsonify({"message": "Besitzer wurde geupdated"}), 200
 
 
 
