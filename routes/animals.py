@@ -23,15 +23,15 @@ def register_animal_routes(app):
                 examples:
                     application/json:
                         - id: 1
-                        name: Dog
-                        age: 3
-                        genus: mammals
-                        owner_id: 2
+                          name: Dog
+                          age: 3
+                          genus: mammals
+                          owner_id: 2
                         - id: 2
-                        name: Cat
-                        age: 2
-                        genus: mammals
-                        owner_id: 3
+                          name: Cat
+                          age: 2
+                          genus: mammals
+                          owner_id: 3
         """
         # Daten abrufen von der DB
         con = get_db_connection() # Verbindung mit der DB
@@ -48,20 +48,20 @@ def register_animal_routes(app):
         ---
         parameters:
             - name: animal_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des anzuzeigenden Tieres
+              in: path
+              type: integer
+              required: true
+              description: Die ID des anzuzeigenden Tieres
         responses:
             200:
                 description: JSON-Objekt von einem Tier
                 examples:
                     application/json:
                         - id: 1
-                        name: Dog
-                        age: 3
-                        genus: mammals
-                        owner_id: 2
+                          name: Dog
+                          age: 3
+                          genus: mammals
+                          owner_id: 2
             404:
                 description: Ti¥er wurde nicht gefunden
                 examples:
@@ -83,9 +83,9 @@ def register_animal_routes(app):
             - application/json
         parameters:
             - in: body
-            name: tier
-            required: true
-            schema:
+              name: tier
+              required: true
+              schema:
                 type: object
                 properties:
                     name:
@@ -135,10 +135,10 @@ def register_animal_routes(app):
         ---
         parameters:
             - name: animal_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des zu löschenden Tieres
+              in: path
+              type: integer
+              required: true
+              description: Die ID des zu löschenden Tieres
         responses:
             200:
                 description: Tier wurde gelöscht
@@ -172,14 +172,14 @@ def register_animal_routes(app):
         ---
         parameters:
             - name: animal_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des Tiers, das ersetzt werden soll
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Tiers, das ersetzt werden soll
             - in: body
-            name: tier
-            required: true
-            schema: 
+              name: tier
+              required: true
+              schema: 
                 type: object
                 properties:
                     name:
@@ -191,7 +191,7 @@ def register_animal_routes(app):
                     genus:
                         type: string
                         example: mammals
-                    owner_id
+                    owner_id:
                         type: integer
                         example: 2
         responses:
@@ -231,14 +231,14 @@ def register_animal_routes(app):
         ---
         parameters:
             - name: animal_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des Tiers, das aktualisiert werden soll
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Tiers, das aktualisiert werden soll
             - in: body
-            name: tier
-            required: anyOf
-            schema: 
+              name: tier
+              required: anyOf
+              schema: 
                 type: object
                 properties:
                     id:

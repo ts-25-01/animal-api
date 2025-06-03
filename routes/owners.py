@@ -22,13 +22,13 @@ def register_owner_routes(app):
                 examples:
                     application/json:
                         - id: 1
-                        name: Max Mustermann
-                        email: max_mustermann@email.de
-                        phone: 01234 56789
+                          name: Max Mustermann
+                          email: max_mustermann@email.de
+                          phone: 01234 56789
                         - id: 2
-                        name: Anna Schmidt
-                        email: anna_schmidt@email.de
-                        phone: 0987 65432
+                          name: Anna Schmidt
+                          email: anna_schmidt@email.de
+                          phone: 0987 65432
         """
         # Daten abrufen von der DB
         con = get_db_connection() # Verbindung mit der DB
@@ -48,19 +48,19 @@ def register_owner_routes(app):
         ---
         parameters:
             - name: owner_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des anzuzeigenden Besitzers
+              in: path
+              type: integer
+              required: true
+              description: Die ID des anzuzeigenden Besitzers
         responses:
             200:
                 description: JSON-Objekt von einem Besitzer
                 examples:
                     application/json:
                         - id: 1
-                        name: Max Mustermann
-                        email: max_mustermann@email.de 
-                        phone: 01234 56789
+                          name: Max Mustermann
+                          email: max_mustermann@email.de 
+                          phone: 01234 56789
             404:
                 description: Besitzer wurde nicht gefunden
                 examples:
@@ -87,9 +87,9 @@ def register_owner_routes(app):
             - application/json
         parameters:
             - in: body
-            name: Besitzer
-            required: true
-            schema:
+              name: Besitzer
+              required: true
+              schema:
                 type: object
                 properties:
                     name:
@@ -137,10 +137,10 @@ def register_owner_routes(app):
         ---
         parameters:
             - name: owner_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des zu löschenden Besitzers
+              in: path
+              type: integer
+              required: true
+              description: Die ID des zu löschenden Besitzers
         responses:
             200:
                 description: Besitzer wurde gelöscht
@@ -174,14 +174,14 @@ def register_owner_routes(app):
         ---
         parameters:
             - name: owner_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des Besitzers, der ersetzt werden soll
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Besitzers, der ersetzt werden soll
             - in: body
-            name: tier
-            required: true
-            schema: 
+              name: tier
+              required: true
+              schema: 
                 type: object
                 properties:
                     name:
@@ -232,14 +232,14 @@ def register_owner_routes(app):
         ---
         parameters:
             - name: owner_id
-            in: path
-            type: integer
-            required: true
-            description: Die ID des Besitzers, der aktualisiert werden soll
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Besitzers, der aktualisiert werden soll
             - in: body
-            name: besitzer
-            required: anyOf
-            schema: 
+              name: besitzer
+              required: anyOf
+              schema: 
                 type: object
                 properties:
                     id:
