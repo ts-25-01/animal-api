@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from database.database import get_db_connection
+from routes.owners import get_owner_by_id
 
 
 ## Hilfsfunktionen für die Entitäten
@@ -290,3 +291,82 @@ def register_animal_routes(app):
             con.commit()
         con.close()
         return jsonify({"message": "Tier wurde geupdated"}), 200
+    
+    # Anzeigen, welcher Owner zum Tier gehört
+    # GET /api/animals/<int:animal_id>/owner
+    @app.route("/api/animals/<int:animal_id>/owner", methods=["GET"])
+    def get_owner_of_animal(animal_id):
+        """
+        Zeigt den Owner eines Tieres an
+        ---
+        parameters:
+            - name: animal_id
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Tieres
+        responses:
+            200:
+                description: Besitzer-Daten oder ggf. eine Info, dass kein Besitzer zugeordnet ist
+        """
+        animal = get_animal_by_id(animal_id)
+        if animal is None:
+            return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
+        if animal["owner_id"] is None:
+            return jsonify({"message": "Tier hat keinen Besitzer und kann adoptiert werden"}), 200
+        owner = get_owner_by_id(animal["owner_id"])
+        if owner is None:
+            return jsonify({"message": "Besitzer nicht gefunden"}), 404
+        
+        return jsonify({
+            "animal": animal["name"],
+            "owner": dict(owner)
+        }), 200
+    
+    ## TODO: JOIN 
+    @app.route("/api/animals/<int:animal_id>/owner/join", methods=["GET"])
+    def get_owner_of_animal_by_join(animal_id):
+        """
+        Zeigt den Owner eines Tieres an (Mit JOIN)
+        ---
+        parameters:
+            - name: animal_id
+              in: path
+              type: integer
+              required: true
+              description: Die ID des Tieres
+        responses:
+            200:
+                description: Besitzer-Daten oder ggf. eine Info, dass kein Besitzer zugeordnet ist
+        """
+        con = get_db_connection()
+        cur = con.cursor()
+        result = cur.execute('''
+                SELECT 
+                    a.name AS animal_name,
+                    o.id AS owner_id,
+                    o.name AS owner_name,
+                    o.email AS owner_email,
+                    o.phone AS owner_phone
+                FROM Animals a JOIN Owners o ON a.owner_id = o.id
+                WHERE a.id = ?
+                ''', (animal_id,)).fetchone()
+        con.close()
+
+        if result:
+            return jsonify({
+                "animal": result["animal_name"],
+                "owner": {
+                    "id": result["owner_id"],
+                    "name": result["owner_name"],
+                    "email": result["owner_email"],
+                    "phone": result["owner_phone"]
+                }
+            }), 200
+        else:
+            animal = get_animal_by_id(animal_id)
+            if animal is None:
+                return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
+            return jsonify({"message": "Tier hat keinen Besitzer"}), 200
+
+        
