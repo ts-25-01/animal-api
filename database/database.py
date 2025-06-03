@@ -1,6 +1,6 @@
 import sqlite3
 
-DATABASE = "./animals.db"
+DATABASE = "./database/animals.db"
 
 def get_db_connection():
     con = sqlite3.connect(DATABASE)

@@ -1,4 +1,4 @@
-from database import get_db_connection
+from database.database import get_db_connection
 from flask import jsonify, request
 
 def get_owner_by_id(owner_id):

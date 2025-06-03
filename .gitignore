@@ -1,2 +1,3 @@
 venv-animal-api
 *.db
+*/__pycache__

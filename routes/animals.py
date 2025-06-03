@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from database import get_db_connection
+from database.database import get_db_connection
 
 
 ## Hilfsfunktionen für die Entitäten
