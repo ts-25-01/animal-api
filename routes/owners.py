@@ -8,6 +8,13 @@ def get_owner_by_id(owner_id):
     con.close()
     return owner
 
+def get_animal_by_id(animal_id):
+    con = get_db_connection()
+    cur = con.cursor()
+    animal = cur.execute('SELECT * FROM Animals WHERE id = ?', (animal_id,)).fetchone()
+    con.close()
+    return animal
+
 
 def register_owner_routes(app):
     ## GET-Route implementieren, d.h. Daten abrufen bzw. alle Owner anzeigen
@@ -291,3 +298,26 @@ def register_owner_routes(app):
             con.commit()
         con.close()
         return jsonify({"message": "Besitzer wurde geupdated"}), 200
+
+    # POST /api/owners/<int:owner_id>/adopt/<int:animal_id>
+    # Route, damit ein Besitzer ein Tier adoptieren kann
+    @app.route("/api/owners/<int:owner_id>/adopt/<int:animal_id>", methods=["POST"])
+    def adopt_animal(owner_id, animal_id):
+        owner = get_owner_by_id(owner_id)
+        if owner is None:
+            return jsonify({"message": "Besitzer wurde nicht gefunden"}), 404
+        animal = get_animal_by_id(animal_id)
+        if animal is None:
+            return jsonify({"message": "Tier wurde nicht gefunden"}), 404
+        if animal["owner_id"] is not None:
+            current_owner = get_owner_by_id(animal["owner_id"])
+            return jsonify({"message": f"Tier gehört bereits {current_owner}"}), 400
+        # Falls das alles nicht zutrifft, kann die Adoption stattfinden
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute('UPDATE Animals SET owner_id = ? WHERE id = ?', (owner_id, animal_id))
+        con.commit()
+        con.close()
+
+        return jsonify({"message": f"{owner["name"]} hat {animal["name"]} adoptiert"}), 200
+        

@@ -370,3 +370,21 @@ def register_animal_routes(app):
             return jsonify({"message": "Tier hat keinen Besitzer"}), 200
 
         
+    # POST /api/animals/<int:animal_id>/release
+    # Tier wird wieder freigegeben, d.h. der Besitzer bzw. die owner_id wird auf Null esetzt
+    @app.route("/api/animals/<int:animal_id>/release", methods=["POST"])
+    def release_animal(animal_id):
+        animal = get_animal_by_id(animal_id)
+        if animal is None:
+            return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
+        if animal["owner_id"] is None:
+            return jsonify({"message": f"Tier mit der ID {animal_id} hat keinen Besitzer"}), 400
+
+        old_owner = get_owner_by_id(animal["owner_id"])
+        con = get_db_connection()
+        cur = con.cursor()
+        cur.execute('UPDATE Animals SET owner_id = NULL WHERE id = ?', (animal_id,))
+        con.commit()
+        con.close()
+
+        return jsonify({"message": f"{animal["name"]} wird nicht mehr besessen von {old_owner["name"]}"}), 200
