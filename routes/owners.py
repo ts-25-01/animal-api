@@ -28,14 +28,16 @@ def register_owner_routes(app):
                 description: JSON-Liste aller Besitzer
                 examples:
                     application/json:
-                        - id: 1
-                          name: Max Mustermann
-                          email: max_mustermann@email.de
-                          phone: 01234 56789
-                        - id: 2
-                          name: Anna Schmidt
-                          email: anna_schmidt@email.de
-                          phone: 0987 65432
+                    -
+                        id: 1
+                        name: Max Mustermann
+                        email: max_mustermann@email.de
+                        phone: 01234 56789
+                    -
+                        id: 2
+                        name: Anna Schmidt
+                        email: anna_schmidt@email.de
+                        phone: 0987 65432
         """
         # Daten abrufen von der DB
         con = get_db_connection() # Verbindung mit der DB
@@ -64,15 +66,15 @@ def register_owner_routes(app):
                 description: JSON-Objekt von einem Besitzer
                 examples:
                     application/json:
-                        - id: 1
-                          name: Max Mustermann
-                          email: max_mustermann@email.de 
-                          phone: 01234 56789
+                        id: 1
+                        name: Max Mustermann
+                        email: max_mustermann@email.de 
+                        phone: 01234 56789
             404:
                 description: Besitzer wurde nicht gefunden
                 examples:
                     application/json:
-                        - message: Besitzer mit der ID 5 existiert nicht
+                        message: Besitzer mit der ID 5 existiert nicht
         """
         con = get_db_connection()
         cur = con.cursor()
@@ -90,14 +92,16 @@ def register_owner_routes(app):
         """
         Neuen Besitzer hinzufügen
         ---
-        consumes:
-            - application/json
+        consumes: [application/json]
         parameters:
-            - in: body
-              name: Besitzer
-              required: true
-              schema:
+        -
+            in: body
+            name: Besitzer
+            required: true
+            description: name muss angegeben werden
+            schema:
                 type: object
+                required: [name]
                 properties:
                     name:
                         type: string
@@ -113,12 +117,12 @@ def register_owner_routes(app):
                 description: Besitzer wurde erfolgreich hinzugefügt
                 examples:
                     application/json:
-                        - message: Besitzer wurde erfolgreich hinzugefügt
+                        message: Besitzer wurde erfolgreich hinzugefügt
             400:
                 description: Keine oder fehlerhafte Daten übertragen
                 examples:
                     application/json:
-                        - message: Keine oder fehlerhafte Daten übertragen
+                        message: Keine oder fehlerhafte Daten übertragen
         """
         new_owner = request.get_json()
         if not new_owner or 'name' not in new_owner:
@@ -143,22 +147,23 @@ def register_owner_routes(app):
         Einen Besitzer löschen
         ---
         parameters:
-            - name: owner_id
-              in: path
-              type: integer
-              required: true
-              description: Die ID des zu löschenden Besitzers
+        -
+            name: owner_id
+            in: path
+            type: integer
+            required: true
+            description: Die ID des zu löschenden Besitzers
         responses:
             200:
                 description: Besitzer wurde gelöscht
                 examples:
                     application/json:
-                        - message: Besitzer wurde erfolgreich gelöscht
+                        message: Besitzer wurde erfolgreich gelöscht
             404:
                 description: Besitzer wurde nicht gefunden
                 examples:
                     application/json:
-                        - message: Besitzer mit der ID 5 existiert nicht
+                        message: Besitzer mit der ID 5 existiert nicht
         """
         con = get_db_connection() 
         cur = con.cursor()
@@ -180,16 +185,20 @@ def register_owner_routes(app):
         Besitzer aktualisieren im Ganzen
         ---
         parameters:
-            - name: owner_id
-              in: path
-              type: integer
-              required: true
-              description: Die ID des Besitzers, der ersetzt werden soll
-            - in: body
-              name: tier
-              required: true
-              schema: 
+        -
+            name: owner_id
+            in: path
+            type: integer
+            required: true
+            description: Die ID des Besitzers, der ersetzt werden soll
+        -
+            in: body
+            name: tier
+            required: true
+            description: name muss angegeben werden
+            schema: 
                 type: object
+                required: [name]
                 properties:
                     name:
                         type: string
@@ -205,12 +214,12 @@ def register_owner_routes(app):
                 description: Besitzer wurde aktualisiert
                 examples:
                     application/json:
-                        - message: Besitzer wurde komplett aktualisiert
+                        message: Besitzer wurde komplett aktualisiert
             404:
                 description: Besitzer wurde nicht gefunden
                 examples:
                     application/json:
-                        - message: Besitzer mit der ID 7 existiert nicht
+                        message: Besitzer mit der ID 7 existiert nicht
         """
         updated_owner = request.get_json() # Speichere dir das Objekt im Body aus dem Request des Clients
         if not updated_owner or 'name' not in updated_owner:
@@ -228,8 +237,6 @@ def register_owner_routes(app):
         return jsonify({"message": "Besitzer wurde komplett aktualisiert"}), 200
 
 
-
-
     ## PATCH-Route -> Ersetze spezifisch einzelne Eigenschaften, d.h. hier schicken wir nur die zu ändernden Eigenschaften im Body als JSON mit
     ## Owners
     @app.route("/api/owners/<int:owner_id>", methods=["PATCH"])
@@ -238,16 +245,20 @@ def register_owner_routes(app):
         Besitzer teilweise ändern (z.B. nur die Email)
         ---
         parameters:
-            - name: owner_id
-              in: path
-              type: integer
-              required: true
-              description: Die ID des Besitzers, der aktualisiert werden soll
-            - in: body
-              name: besitzer
-              required: anyOf
-              schema: 
+        -
+            name: owner_id
+            in: path
+            type: integer
+            required: true
+            description: Die ID des Besitzers, der aktualisiert werden soll
+        -
+            in: body
+            name: besitzer
+            required: true
+            description: Es muss mindestens einer der Werte angegeben werden
+            schema: 
                 type: object
+                required: anyOf
                 properties:
                     id:
                         type: integer
@@ -266,12 +277,12 @@ def register_owner_routes(app):
                 description: Besitzer wurde geupdated
                 examples:
                     application/json:
-                        - message: Besitzer wurde geupdated
+                        message: Besitzer wurde geupdated
             404:
                 description: Besitzer wurde nicht gefunden
                 examples:
                     application/json:
-                        - message: Besitzer mit der ID 7 existiert nicht
+                        message: Besitzer mit der ID 7 existiert nicht
         """
         updated_owner = request.get_json()
         if not updated_owner:

@@ -250,7 +250,7 @@ def register_animal_routes(app):
         -
             in: body
             name: tier
-            required: anyOf
+            required: true
             description: Es muss mindestens einer der Werte angegeben werden
             schema: 
                 type: object
