@@ -1,12 +1,8 @@
 import mysql.connector
+from db_config import DB_CONFIG
 
 try:
-    con = mysql.connector.connect(
-        host='localhost',
-        database='animal_api_db',
-        user='animal_api_user',
-        password='secure_password123'
-    )
+    con = mysql.connector.connect(**DB_CONFIG)
     if con.is_connected():
         print("Verbindung erfolgreich!")
         con.close()
