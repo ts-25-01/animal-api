@@ -1,3 +1,4 @@
 venv-animal-api
 *.db
 */__pycache__
+.vscode/
