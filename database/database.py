@@ -2,12 +2,15 @@ import mysql.connector
 
 
 def get_db_connection():
-    con = mysql.connector.connect(
-        host='localhost',
-        database='animal_api_db',
-        user='animal_api_user',
-        password='secure_password123'
-    )
+    try:
+        con = mysql.connector.connect(
+            host='localhost',
+            database='animal_api_db',
+            user='animal_api_user',
+            password='secure_password123'
+        )
+    except mysql.connector.Error as e:
+        print(f"Fehler aufgetreten: {e}")
     return con
 
 def get_cursor(con):
@@ -41,7 +44,8 @@ def init_db():
     #     cur.execute('ALTER TABLE Animals ADD CONSTRAINT owner_id FOREIGN KEY (owner_id) REFERENCES Owners (id);')
     # except:
     #     print("owner_id Spalte hinzugefügt")
-    cur.execute('SELECT COUNT(*) AS count FROM Owners')
+    cur.execute('SELECT COUNT(*) AS count FROM Owners') # Ein Dictionary aus Schlüssel-Wert Paaren
+    # z.B. bei 4 Datensätzen bekomme ich ein { "count": 4 } zurück
     owner_count = cur.fetchone()['count'] 
     if owner_count == 0:
         data = [

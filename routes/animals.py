@@ -1,16 +1,16 @@
 from flask import request, jsonify
 from database.database import get_db_connection, get_cursor
-from routes.owners import get_owner_by_id
+from lib.helper_functions import get_owner_by_id
 
 
-## Hilfsfunktionen für die Entitäten
-def get_animal_by_id(animal_id):
-    con = get_db_connection()
-    cur = get_cursor(con)
-    cur.execute('SELECT * FROM Animals WHERE id = %s', (animal_id,))
-    animal = cur.fetchone()
-    con.close()
-    return animal
+# ## Hilfsfunktionen für die Entitäten
+# def get_animal_by_id(animal_id):
+#     con = get_db_connection()
+#     cur = get_cursor(con) # con.cursor(dictionary=True)
+#     cur.execute('SELECT * FROM Animals WHERE id = %s', (animal_id,))
+#     animal = cur.fetchone()
+#     con.close()
+#     return animal
 
 def register_animal_routes(app):
     ## GET-Route implementieren, d.h. Daten abrufen bzw. alle Tiere anzeigen
@@ -35,13 +35,14 @@ def register_animal_routes(app):
                           genus: mammals
                           owner_id: 3
         """
-        # Daten abrufen von der DB
-        con = get_db_connection() # Verbindung mit der DB
+        con = get_db_connection()
         cur = get_cursor(con)
         cur.execute('SELECT * FROM Animals')
         animals = cur.fetchall()
         con.close()
-        return jsonify([dict(animal) for animal in animals]), 200
+        # return jsonify([dict(animal) for animal in animals]), 200
+        return jsonify(animals), 200
+
 
     ## GET-Route implementieren, um Daten von einem Tier anzuzeigen
     @app.route("/api/animals/<int:animal_id>", methods=['GET'])
@@ -66,7 +67,7 @@ def register_animal_routes(app):
                           genus: mammals
                           owner_id: 2
             404:
-                description: Ti¥er wurde nicht gefunden
+                description: Tier wurde nicht gefunden
                 examples:
                     application/json:
                         - message: Tier mit der ID 7 existiert nicht
@@ -115,20 +116,19 @@ def register_animal_routes(app):
                     application/json:
                         - message: Keine oder fehlerhafte Daten übertragen
         """
-        new_animal = request.get_json() # {"name": "turtle", "age:": 100, "genus": "reptile"}
+        new_animal = request.get_json() 
         if not new_animal or 'name' not in new_animal:
             return jsonify({"message": "Keine oder fehlerhafte Daten übertragen"}), 400
-        con = get_db_connection() # Schritt 1: DB-Verbindung
-        cur = get_cursor(con) # Schritt 2: Cursor-Objekt definieren
-        # Schritt 3: Befehl ausführen
+        con = get_db_connection() 
+        cur = get_cursor(con) 
         cur.execute('INSERT INTO Animals (name, age, genus, owner_id) VALUES (%s,%s,%s, %s)', 
                     (new_animal['name'],
                     new_animal['age'],
                     new_animal['genus'],
                     new_animal['owner_id'])
-                    ) # An dieser Stelle SQL-Befehl zum Hinzufügen des neuen Objektes
-        con.commit() # Schritt 4: Persistieren der Veränderungen
-        con.close() # Schritt 5: Verbindung zur DB wieder schließen
+                    ) 
+        con.commit() 
+        con.close() 
         return jsonify({"message": "Tier wurde erfolgreich hinzugefügt"}), 201
 
     ## DELETE-Route, um ein Tier aus der Liste zu löschen
@@ -157,14 +157,11 @@ def register_animal_routes(app):
         """
         con = get_db_connection() 
         cur = get_cursor(con)
-        # Überprüfe, ob das Tier mit der angegebenen ID überhaupt existiert
         cur.execute('SELECT * FROM Animals WHERE id = %s', (animal_id,))
         animal = cur.fetchone()
         if animal is None:
             return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
         cur.execute('DELETE FROM Animals WHERE id = %s', (animal_id,) )
-        ## Achtung: Nutz bitte die %s-Funktion, um SQL-Injection zu verhindern, sonst sähe es so aus:
-        # cur.execute(f'DELETE FROM Animals WHERE id = {animal_id}') # 4 OR 1=! --
         con.commit()
         con.close()
         return jsonify({"message": "Tier wurde erfolgreich gelöscht"}), 200
@@ -268,7 +265,7 @@ def register_animal_routes(app):
                     application/json:
                         - message: Tier mit der ID 7 existiert nicht
         """
-        updated_animal = request.get_json() # name, age, genus
+        updated_animal = request.get_json()
         if not updated_animal:
             return jsonify({"message": "Fehlende Daten"}), 400
         con = get_db_connection()
@@ -277,15 +274,13 @@ def register_animal_routes(app):
         animal = cur.fetchone()
         if animal is None:
             return jsonify({"message": f"Tier mit der ID {animal_id} existiert nicht"}), 404
-        # Leere Liste, wo wir die Felder mitgeben, die wir speziell updaten wollen
-        update_fields = [] # Notizzettel, wo wir alle Spalten reinschreiben, die der Client updaten möchte, z.B. nur name: elephant Joel, age = 24
-        # Leere Liste, wo wir die Werte der Felder mitgeben, die wir updaten wollen
-        update_values = [] # Notizzettel, wo wir die entsprechenden Werte reinschreiben von den Spalten, die wir aktualisieren wollen
+        update_fields = []
+        update_values = [] 
 
-        for field in ['name', 'age', 'genus', 'owner_id']: # Iteriere über alle möglichen, vorhandenen Spalte der Tabelle
+        for field in ['name', 'age', 'genus', 'owner_id']: 
             if field in updated_animal:
-                update_fields.append(f'{field} = %s') # name = %s, age = %s
-                update_values.append(updated_animal[field]) # elephant Joel, 24
+                update_fields.append(f'{field} = %s') 
+                update_values.append(updated_animal[field]) 
         
         if update_fields:
             update_values.append(animal_id)
